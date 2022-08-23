@@ -16,14 +16,16 @@ namespace rt2_ros2{
     class RandPos : public rclcpp :: Node{
         public:
             RandPos(const rclcpp::NodeOptions & options) : Node("pos", options){
+                // position server initialization
                 serv = this->create_service<Random_Position>("/position_server", std::bind(&RandPos::handle, this, _1, _2, _3));
             }
 
         private:
+            // function to return a random value in an interval
             double randMToN(double M, double N){
                 return M + (rand() / ( RAND_MAX / (N-M) ) ) ; 
                 }
-
+            // function that handles the service when the client calls
             void handle(
                 const std::shared_ptr<rmw_request_id_t> request_header,
                 const std::shared_ptr<Random_Position::Request> req,
@@ -31,6 +33,7 @@ namespace rt2_ros2{
             )
             {
                 (void)request_header;
+                    // response definition as per RandomPosition.srv
                     res->x = randMToN(req->x_min, req->x_max);
                     res->y = randMToN(req->y_min, req->y_max);
                     res->theta = randMToN(-3.14, 3.14);

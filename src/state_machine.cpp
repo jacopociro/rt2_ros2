@@ -25,6 +25,7 @@ namespace rt2_ros2 {
         public:
             GoalClient() : Node("GoalClient")
                 {
+                    // /go_to_point client initialization
                     client = this->create_client<Pos>("/go_to_point");
                     this->req = std::make_shared<Pos::Request>();
                     this->res = std::make_shared<Pos::Response>();
@@ -46,13 +47,16 @@ namespace rt2_ros2 {
     class FSM : public rclcpp::Node{
         public: 
             FSM(const rclcpp::NodeOptions & options) : Node("FSM", options){
+                // timer initialization, this timer will be called every 500 ms
                 clock = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&FSM::clock_cb, this));
+                // /user_interface service initialization 
                 srv = this->create_service<Command>("/user_interface", std::bind(&FSM::handle, this, _1, _2, _3));
-
+                // /position_server client initialization
                 Pos_Client = this->create_client<Random_Position>("/position_server");
             }
 
         private:
+            // service handle for /user_interface
             void handle(const std::shared_ptr<rmw_request_id_t> header, const std::shared_ptr<Command::Request> request, const std::shared_ptr<Command::Response> response){
                 (void) header;
                 if(request->command == "stop"){
@@ -68,6 +72,7 @@ namespace rt2_ros2 {
             }
             void clock_cb(){
                 auto RandPos = std::make_shared<Random_Position::Request>();
+                // this is just a check every 500ms 
                 if(notdone == false){
                     notdone = true;
                 }
@@ -83,6 +88,7 @@ namespace rt2_ros2 {
                     using ServiceFuture = rclcpp::Client<Random_Position>::SharedFuture;
                     auto res_rec_cb = [this](ServiceFuture future){
                         auto goal = std::make_shared<GoalClient>();
+                        // this is where I get a new random position
                         goal->req->x=future.get()->x;
                         goal->req->y=future.get()->y;
                         goal->req->theta=future.get()->theta;
